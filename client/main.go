@@ -27,7 +27,7 @@ func main() {
 
 	log.Println("listening on:", listener.Addr())
 
-	c, err := grpc.Dial("127.0.0.1:1234", grpc.WithInsecure())
+	c, err := grpc.Dial("vps:1234", grpc.WithInsecure())
 	checkError(err)
 	peer_conn = c
 
