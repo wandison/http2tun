@@ -82,6 +82,10 @@ func (s *server) Stream(stream TunService_StreamServer) error {
 	sess_die := make(chan struct{})
 	ch_agent := s.recv(stream, sess_die)
 	conn, ch_endpoint := s.endpoint(sess_die)
+	if conn == nil {
+		return nil
+	}
+
 	defer func() {
 		close(sess_die)
 	}()
