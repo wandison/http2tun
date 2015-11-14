@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package proto;
+
+service TunService {
+	rpc Stream(stream Tun.Frame) returns (stream Tun.Frame); 
+}
+
+message Tun {
+	message Frame {
+		bytes Message=1;
+	}
+}
