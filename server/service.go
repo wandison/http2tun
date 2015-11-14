@@ -38,7 +38,7 @@ func (s *server) recv(stream TunService_StreamServer, sess_die chan struct{}) ch
 // endpoint receiver
 func (s *server) endpoint(sess_die chan struct{}) (c net.Conn, ch_endpoint <-chan []byte) {
 	ch := make(chan []byte)
-	conn, err := net.Dial("tcp", "news.163.com:80")
+	conn, err := net.Dial("tcp", "localhost:1194")
 	if err != nil {
 		log.Println(err)
 		return
