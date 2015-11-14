@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package proto;
+package main;
 
 service TunService {
 	rpc Stream(stream Tun.Frame) returns (stream Tun.Frame); 

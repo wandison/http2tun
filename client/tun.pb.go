@@ -3,7 +3,7 @@
 // DO NOT EDIT!
 
 /*
-Package proto is a generated protocol buffer package.
+Package main is a generated protocol buffer package.
 
 It is generated from these files:
 	tun.proto
@@ -11,9 +11,9 @@ It is generated from these files:
 It has these top-level messages:
 	Tun
 */
-package proto
+package main
 
-import proto1 "github.com/golang/protobuf/proto"
+import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 
@@ -23,7 +23,7 @@ import (
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
-var _ = proto1.Marshal
+var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
@@ -31,7 +31,7 @@ type Tun struct {
 }
 
 func (m *Tun) Reset()         { *m = Tun{} }
-func (m *Tun) String() string { return proto1.CompactTextString(m) }
+func (m *Tun) String() string { return proto.CompactTextString(m) }
 func (*Tun) ProtoMessage()    {}
 
 type Tun_Frame struct {
@@ -39,7 +39,7 @@ type Tun_Frame struct {
 }
 
 func (m *Tun_Frame) Reset()         { *m = Tun_Frame{} }
-func (m *Tun_Frame) String() string { return proto1.CompactTextString(m) }
+func (m *Tun_Frame) String() string { return proto.CompactTextString(m) }
 func (*Tun_Frame) ProtoMessage()    {}
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -61,7 +61,7 @@ func NewTunServiceClient(cc *grpc.ClientConn) TunServiceClient {
 }
 
 func (c *tunServiceClient) Stream(ctx context.Context, opts ...grpc.CallOption) (TunService_StreamClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_TunService_serviceDesc.Streams[0], c.cc, "/proto.TunService/Stream", opts...)
+	stream, err := grpc.NewClientStream(ctx, &_TunService_serviceDesc.Streams[0], c.cc, "/main.TunService/Stream", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +128,7 @@ func (x *tunServiceStreamServer) Recv() (*Tun_Frame, error) {
 }
 
 var _TunService_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "proto.TunService",
+	ServiceName: "main.TunService",
 	HandlerType: (*TunServiceServer)(nil),
 	Methods:     []grpc.MethodDesc{},
 	Streams: []grpc.StreamDesc{
