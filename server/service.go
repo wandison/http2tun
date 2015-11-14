@@ -60,6 +60,9 @@ func (s *server) endpoint(sess_die chan struct{}) (c net.Conn, ch_endpoint <-cha
 	}
 
 	go func() {
+		defer func() {
+			close(ch)
+		}()
 		for {
 			bts := make([]byte, 512)
 			n, err := conn.Read(bts)
@@ -103,7 +106,10 @@ func (s *server) Stream(stream TunService_StreamServer) error {
 				return nil
 			}
 			conn.Write(bts)
-		case bts := <-ch_endpoint:
+		case bts, ok := <-ch_endpoint:
+			if !ok {
+				return nil
+			}
 			encoder.XORKeyStream(bts, bts)
 			if err := stream.Send(&Tun_Frame{bts}); err != nil {
 				log.Println(err)
