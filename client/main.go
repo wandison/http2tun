@@ -16,10 +16,6 @@ const (
 	_key_recv = "*!@#($JZVAS"
 )
 
-var (
-	peer_conn *grpc.ClientConn
-)
-
 func main() {
 	// resolve address & start listening
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", _port)
@@ -29,10 +25,6 @@ func main() {
 	checkError(err)
 
 	log.Println("listening on:", listener.Addr())
-
-	c, err := grpc.Dial("vps:1234", grpc.WithInsecure())
-	checkError(err)
-	peer_conn = c
 
 	// loop accepting
 	for {
@@ -49,6 +41,11 @@ func peer(stream TunService_StreamClient, sess_die chan struct{}) <-chan []byte 
 	ch := make(chan []byte)
 
 	go func() {
+		defer func() {
+			close(ch)
+		}()
+
+		// decoder
 		decoder, err := rc4.NewCipher([]byte(_key_recv))
 		if err != nil {
 			log.Println(err)
@@ -103,7 +100,14 @@ func handleClient(conn *net.TCPConn) {
 		conn.Close()
 	}()
 
-	cli := NewTunServiceClient(peer_conn)
+	// grpc conn
+	svc, err := grpc.Dial("vps:1234", grpc.WithInsecure())
+	if err != nil {
+		log.Println(err)
+	}
+
+	// open stream
+	cli := NewTunServiceClient(svc)
 	stream, err := cli.Stream(context.Background())
 	if err != nil {
 		log.Println(err)
@@ -111,6 +115,7 @@ func handleClient(conn *net.TCPConn) {
 	}
 	defer stream.CloseSend()
 
+	// encoder
 	encoder, err := rc4.NewCipher([]byte(_key_send))
 	if err != nil {
 		log.Println(err)
@@ -126,7 +131,10 @@ func handleClient(conn *net.TCPConn) {
 
 	for {
 		select {
-		case bts := <-ch_peer:
+		case bts, ok := <-ch_peer:
+			if !ok {
+				return
+			}
 			if _, err := conn.Write(bts); err != nil {
 				log.Println(err)
 				return
