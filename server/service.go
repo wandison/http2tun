@@ -91,6 +91,7 @@ func (s *server) Stream(stream TunService_StreamServer) error {
 
 	defer func() {
 		close(sess_die)
+		conn.Close()
 	}()
 
 	encoder, err := rc4.NewCipher([]byte(_key_send))
@@ -105,7 +106,10 @@ func (s *server) Stream(stream TunService_StreamServer) error {
 			if !ok {
 				return nil
 			}
-			conn.Write(bts)
+			if _, err := conn.Write(bts); err != nil {
+				log.Println(err)
+				return nil
+			}
 		case bts, ok := <-ch_endpoint:
 			if !ok {
 				return nil
