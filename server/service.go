@@ -1,9 +1,15 @@
 package main
 
 import (
+	"crypto/rc4"
 	"io"
 	"log"
 	"net"
+)
+
+const (
+	_key_recv = "zkxkiej!@#$"
+	_key_send = "*!@#($JZVAS"
 )
 
 type server struct{}
@@ -15,6 +21,13 @@ func (s *server) recv(stream TunService_StreamServer, sess_die chan struct{}) ch
 		defer func() {
 			close(ch)
 		}()
+
+		decoder, err := rc4.NewCipher([]byte(_key_recv))
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
 		for {
 			in, err := stream.Recv()
 			if err == io.EOF { // client closed
@@ -26,6 +39,8 @@ func (s *server) recv(stream TunService_StreamServer, sess_die chan struct{}) ch
 				log.Println(err)
 				return
 			}
+
+			decoder.XORKeyStream(in.Message, in.Message)
 			select {
 			case ch <- in.Message:
 			case <-sess_die:
@@ -70,11 +85,22 @@ func (s *server) Stream(stream TunService_StreamServer) error {
 	defer func() {
 		close(sess_die)
 	}()
+
+	encoder, err := rc4.NewCipher([]byte(_key_send))
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+
 	for {
 		select {
-		case bts := <-ch_agent: // frames from agent
+		case bts, ok := <-ch_agent:
+			if !ok {
+				return nil
+			}
 			conn.Write(bts)
 		case bts := <-ch_endpoint:
+			encoder.XORKeyStream(bts, bts)
 			if err := stream.Send(&Tun_Frame{bts}); err != nil {
 				log.Println(err)
 				return err

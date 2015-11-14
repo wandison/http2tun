@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/rc4"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"io"
@@ -10,7 +11,9 @@ import (
 )
 
 const (
-	_port = ":1194" // the incoming address for this agent, you can use docker -p to map ports
+	_port     = ":1194" // the incoming address for this agent, you can use docker -p to map ports
+	_key_send = "zkxkiej!@#$"
+	_key_recv = "*!@#($JZVAS"
 )
 
 var (
@@ -46,6 +49,12 @@ func peer(stream TunService_StreamClient, sess_die chan struct{}) <-chan []byte 
 	ch := make(chan []byte)
 
 	go func() {
+		decoder, err := rc4.NewCipher([]byte(_key_recv))
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
 		for {
 			in, err := stream.Recv()
 			if err == io.EOF {
@@ -56,6 +65,7 @@ func peer(stream TunService_StreamClient, sess_die chan struct{}) <-chan []byte 
 				log.Println(err)
 				return
 			}
+			decoder.XORKeyStream(in.Message, in.Message)
 			select {
 			case ch <- in.Message:
 			case <-sess_die:
@@ -86,8 +96,17 @@ func client(conn *net.TCPConn, sess_die chan struct{}) <-chan []byte {
 }
 
 func handleClient(conn *net.TCPConn) {
+	defer func() {
+		conn.Close()
+	}()
+
 	cli := NewTunServiceClient(peer_conn)
 	stream, err := cli.Stream(context.Background())
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	encoder, err := rc4.NewCipher([]byte(_key_send))
 	if err != nil {
 		log.Println(err)
 		return
@@ -108,6 +127,7 @@ func handleClient(conn *net.TCPConn) {
 				return
 			}
 		case bts := <-ch_client:
+			encoder.XORKeyStream(bts, bts)
 			if err := stream.Send(&Tun_Frame{bts}); err != nil {
 				log.Println(err)
 				return
@@ -115,6 +135,7 @@ func handleClient(conn *net.TCPConn) {
 		}
 	}
 }
+
 func checkError(err error) {
 	if err != nil {
 		log.Println(err)
