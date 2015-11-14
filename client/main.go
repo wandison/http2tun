@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	_port = ":2345" // the incoming address for this agent, you can use docker -p to map ports
+	_port = ":1194" // the incoming address for this agent, you can use docker -p to map ports
 )
 
 var (
