@@ -2,8 +2,8 @@ package main
 
 import (
 	"google.golang.org/grpc"
+	"log"
 	"net"
-	"os"
 )
 
 const (
@@ -13,13 +13,12 @@ const (
 func main() {
 	lis, err := net.Listen("tcp", _port)
 	if err != nil {
-		log.Critical(err)
-		os.Exit(-1)
+		log.Fatal(err)
 	}
-	log.Info("listening on ", lis.Addr())
+	log.Println("listening on ", lis.Addr())
 
 	s := grpc.NewServer()
 	ins := new(server)
-	pb.RegisterTunServiceServer(s, ins)
+	RegisterTunServiceServer(s, ins)
 	s.Serve(lis)
 }
