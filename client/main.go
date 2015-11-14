@@ -103,13 +103,11 @@ func handleClient(conn *net.TCPConn) {
 	for {
 		select {
 		case bts := <-ch_peer:
-			log.Println(bts)
 			if _, err := conn.Write(bts); err != nil {
 				log.Println(err)
 				return
 			}
 		case bts := <-ch_client:
-			log.Println(bts)
 			if err := stream.Send(&Tun_Frame{bts}); err != nil {
 				log.Println(err)
 				return

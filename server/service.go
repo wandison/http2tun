@@ -73,7 +73,6 @@ func (s *server) Stream(stream TunService_StreamServer) error {
 	for {
 		select {
 		case bts := <-ch_agent: // frames from agent
-			log.Println(bts)
 			conn.Write(bts)
 		case bts := <-ch_endpoint:
 			if err := stream.Send(&Tun_Frame{bts}); err != nil {
