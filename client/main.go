@@ -78,6 +78,9 @@ func peer(stream TunService_StreamClient, sess_die chan struct{}) <-chan []byte 
 func client(conn *net.TCPConn, sess_die chan struct{}) <-chan []byte {
 	ch := make(chan []byte)
 	go func() {
+		defer func() {
+			close(ch)
+		}()
 		for {
 			bts := make([]byte, 512)
 			n, err := conn.Read(bts)
@@ -106,6 +109,8 @@ func handleClient(conn *net.TCPConn) {
 		log.Println(err)
 		return
 	}
+	defer stream.CloseSend()
+
 	encoder, err := rc4.NewCipher([]byte(_key_send))
 	if err != nil {
 		log.Println(err)
@@ -126,7 +131,10 @@ func handleClient(conn *net.TCPConn) {
 				log.Println(err)
 				return
 			}
-		case bts := <-ch_client:
+		case bts, ok := <-ch_client:
+			if !ok {
+				return
+			}
 			encoder.XORKeyStream(bts, bts)
 			if err := stream.Send(&Tun_Frame{bts}); err != nil {
 				log.Println(err)
